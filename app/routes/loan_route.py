@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session,joinedload
-from models.loan import Loan
-from models.book import Book
-from models.user import User
-from schemas.loan import LoanCreate, LoanIssueResponse, LoanExtensionResponse, LoanHistoryResponse, LoanReturnResponse, OverdueLoanResponse, LoanExtend
-from database import get_db
+from app.models.loan_model import Loan
+from app.models.book_model import Book
+from app.models.user_model import User
+from app.schemas.loan_schema import LoanCreate, LoanIssueResponse, LoanExtensionResponse, LoanHistoryResponse, LoanReturnResponse, OverdueLoanResponse, LoanExtend
+from app.database import get_db
 from datetime import datetime,timedelta
 from sqlalchemy import and_
 
@@ -103,15 +103,17 @@ def extend_loan(id: int, extend: LoanExtend, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Only active loans can be extended")
     if db_loan.extensions_count >= 2:
         raise HTTPException(status_code=400, detail="Maximum extensions reached")
+    if extend.extension_days <= 0:
+        raise HTTPException(status_code=400, detail="Extension days must be positive")
+    
+    if db_loan.extensions_count == 0:
+        db_loan.original_due_date = db_loan.original_due_date or db_loan.due_date
     
     extension_period = timedelta(days=extend.extension_days)
     new_due_date = db_loan.due_date + extension_period
     db_loan.due_date = new_due_date
     db_loan.extensions_count += 1
-    db_loan.extended_due_date = new_due_date
-    if db_loan.extensions_count == 1:
-        db_loan.original_due_date = db_loan.original_due_date or db_loan.due_date
-    
+
     db.commit()
     db.refresh(db_loan)
     return db_loan

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func,case
-from models.loan import Loan
-from models.book import Book
-from models.user import User
-from schemas.stat import PopularBookResponse, ActiveUserResponse, OverviewResponse
-from database import get_db
+from app.models.loan_model import Loan
+from app.models.book_model import Book
+from app.models.user_model import User
+from app.schemas.stat_schema import PopularBookResponse, ActiveUserResponse, OverviewResponse
+from app.database import get_db
 from datetime import datetime, date
 
 router = APIRouter(prefix="/api/stats", tags=["Statistics"])
