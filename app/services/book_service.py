@@ -4,6 +4,8 @@ from app.models.book_model import Book
 from app.schemas.book_schema import BookCreate, BookUpdate
 from fastapi import HTTPException
 from typing import Optional
+from sqlalchemy import func
+from app.models.loan_model import Loan
 
 class BookService:
     def __init__(self, db: Session):
@@ -63,3 +65,19 @@ class BookService:
             raise HTTPException(status_code=404, detail="Book not found")
         self.db.delete(db_book)
         self.db.commit()
+
+    def get_most_borrowed_books(self, limit: int = 3):
+        results = (
+            self.db.query(
+                Book.id.label("book_id"),
+                Book.title,
+                Book.author,
+                func.count(Loan.id).label("borrow_count")
+            )
+            .join(Loan, Loan.book_id == Book.id)
+            .group_by(Book.id, Book.title, Book.author)
+            .order_by(func.count(Loan.id).desc())
+            .limit(limit)
+            .all()
+        )
+        return results

@@ -84,7 +84,7 @@ class LoanService:
         return loans if loans else []
 
     def extend_loan(self, loan_id: int, extend: LoanExtend) -> Loan:
-        db_loan = self.db.query(Loan).filter(Loan.id == id).first()
+        db_loan = self.db.query(Loan).filter(Loan.id == loan_id).first()
         if not db_loan:
             raise HTTPException(status_code=404, detail="Loan not found")
         if db_loan.status != "ACTIVE":
